@@ -38,6 +38,22 @@ app.get('/todos', (req, res) => {
 	});
 });
 
+// GET by ID
+app.get('/todos/:id', (req, res) => {
+	// res.send(req.params);
+	Todo.findById(req.params.id).then( (todo) => {
+		// console.log('Todo: ', todo);
+		if (todo) {
+			res.status(200).send({todo});
+		} else {
+			res.status(204).send({todo: null});
+		}
+	}, (e) => {
+		res.status(400).send(e);
+	});
+});
+
+
 app.listen(3000, () => {
 	console.log('Started server on port 3000');
 });
