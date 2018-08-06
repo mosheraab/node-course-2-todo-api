@@ -1,5 +1,6 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectId} =  require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
@@ -72,4 +73,42 @@ describe('GET /todos', () => {
 			})
 			.end(done);
 	});
+});
+
+describe('GET /todos/:id', () => {
+	it('Test - Get id OK', (done) => {
+		// get just one ID
+		Todo.findOne().then( (todo) => {
+			//console.log("Objectid: ", todo._id.toString());
+			expect(todo).toBeDefined(); // making sure object is found
+			if (todo) {
+				request(app)
+						.get('/todos/' + todo._id.toString())
+						.expect(200)
+						.expect((res) => {
+							// console.log('Todos: ', JSON.stringify(res.body, undefined, 2));
+							expect(res.body.todo._id).toBe(todo._id.toString());
+							expect(res.body.todo.text).toBe(todo.text);
+						})
+						.end(done);
+			}
+		}). catch( (e) => done(e) )
+	});
+
+	it('Test - Get id not exists', (done) => {
+		// get just one ID
+		request(app)
+				.get('/todos/' + new ObjectId())
+				.expect(204)
+				.end(done);
+	});
+
+	it('Test - Get invalid object ID value', (done) => {
+		// get just one ID
+		request(app)
+				.get('/todos/' + "123")
+				.expect(400)
+				.end(done);
+	});
+	
 });
