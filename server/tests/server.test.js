@@ -164,7 +164,7 @@ describe('DELETE /todos/:id', () => {
 
 // Tests for PATCH
 describe('PATCH (update) /todos/:id', () => {
-	it('Test - Patch id OK', (done) => {
+	it('Test - Patch text for id OK', (done) => {
 		// get just one ID
 		Todo.findOne().then( (todo) => {
 			//console.log("Objectid: ", todo._id.toString());
@@ -178,6 +178,25 @@ describe('PATCH (update) /todos/:id', () => {
 						// console.log('Todos: ', JSON.stringify(res.body, undefined, 2));
 						expect(res.body.todo._id).toBe(todo._id.toString());
 						expect(res.body.todo.text).toBe(todo.text + '*');
+					})
+					.end(done);							
+			}
+		}). catch( (e) => done(e) )
+	});
+
+	it('Test - Patch text for completed false, and nullify completed At OK', (done) => {
+		// get just one ID
+		Todo.findOne().then( (todo) => {
+			//console.log("Objectid: ", todo._id.toString());
+			expect(todo).toBeDefined(); // making sure object is found
+			if (todo) {
+				request(app)
+					.patch('/todos/' + todo._id.toString())
+					.send({completed: false})
+					.expect(200)
+					.expect((res) => {
+						// console.log('Todos: ', JSON.stringify(res.body, undefined, 2));
+						expect(res.body.todo.completedAt).toBe(null);
 					})
 					.end(done);							
 			}
