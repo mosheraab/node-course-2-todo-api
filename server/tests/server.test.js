@@ -129,7 +129,17 @@ describe('DELETE /todos/:id', () => {
 							expect(res.body.todo._id).toBe(todo._id.toString());
 							expect(res.body.todo.text).toBe(todo.text);
 						})
-						.end(done);
+						.end((err,res) => {
+							if (err) {
+								return done(err);
+							}
+							
+							// check that delete was done
+							Todo.findById(todo._id).then((todo) => {
+								expect(todo).toBe(null);
+								done();
+							}).catch( (e) => done(e));	
+						});
 			}
 		}). catch( (e) => done(e) )
 	});
