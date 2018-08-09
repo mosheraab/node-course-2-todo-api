@@ -107,7 +107,46 @@ describe('GET /todos/:id', () => {
 		// get just one ID
 		request(app)
 				.get('/todos/' + "123")
-				.expect(400)
+				.expect(404)
+				.end(done);
+	});
+	
+});
+
+// Tests for DELETE
+describe('DELETE /todos/:id', () => {
+	it('Test - Delete id OK', (done) => {
+		// get just one ID
+		Todo.findOne().then( (todo) => {
+			//console.log("Objectid: ", todo._id.toString());
+			expect(todo).toBeDefined(); // making sure object is found
+			if (todo) {
+				request(app)
+						.delete('/todos/' + todo._id.toString())
+						.expect(200)
+						.expect((res) => {
+							// console.log('Todos: ', JSON.stringify(res.body, undefined, 2));
+							expect(res.body.todo._id).toBe(todo._id.toString());
+							expect(res.body.todo.text).toBe(todo.text);
+						})
+						.end(done);
+			}
+		}). catch( (e) => done(e) )
+	});
+
+	it('Test - Delete id not exists', (done) => {
+		// get just one ID
+		request(app)
+				.delete('/todos/' + new ObjectId())
+				.expect(204)
+				.end(done);
+	});
+
+	it('Test - Get invalid object ID value', (done) => {
+		// get just one ID
+		request(app)
+				.delete('/todos/' + "123")
+				.expect(404)
 				.end(done);
 	});
 	

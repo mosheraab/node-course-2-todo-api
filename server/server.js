@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const {ObjectId} =  require('mongodb');
 
 var {mongoose} = require('./db/mongoose.js');
 var {Todo} = require('./models/todo');
@@ -42,6 +43,10 @@ app.get('/todos', (req, res) => {
 // GET by ID
 app.get('/todos/:id', (req, res) => {
 	// res.send(req.params);
+	if (!ObjectId.isValid(req.params.id)) {
+		return res.status(404).send('Invalid object ID');
+	}
+	
 	Todo.findById(req.params.id).then( (todo) => {
 		// console.log('Todo: ', todo);
 		if (todo) {
@@ -54,6 +59,23 @@ app.get('/todos/:id', (req, res) => {
 	});
 });
 
+// DELETE by ID
+app.delete('/todos/:id', (req, res) => {
+	// res.send(req.params);
+	if (!ObjectId.isValid(req.params.id)) {
+		return res.status(404).send(); //'Invalid object ID');
+	}
+	Todo.findByIdAndDelete(req.params.id).then( (todo) => {
+		// console.log('Todo: ', todo);
+		if (todo) {
+			res.status(200).send({todo});
+		} else {
+			res.status(204).send({todo: null});
+		}
+	}, (e) => {
+		res.status(400).send(e);
+	});
+});
 
 app.listen(port, () => {
 	console.log('Started server on port ', port);
