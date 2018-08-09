@@ -161,3 +161,49 @@ describe('DELETE /todos/:id', () => {
 	});
 	
 });
+
+// Tests for PATCH
+describe('PATCH (update) /todos/:id', () => {
+	it('Test - Patch id OK', (done) => {
+		// get just one ID
+		Todo.findOne().then( (todo) => {
+			//console.log("Objectid: ", todo._id.toString());
+			expect(todo).toBeDefined(); // making sure object is found
+			if (todo) {
+				request(app)
+					.patch('/todos/' + todo._id.toString())
+					.send({text: (todo.text + '*')})
+					.expect(200)
+					.expect((res) => {
+						// console.log('Todos: ', JSON.stringify(res.body, undefined, 2));
+						expect(res.body.todo._id).toBe(todo._id.toString());
+						expect(res.body.todo.text).toBe(todo.text + '*');
+					})
+					.end(done);							
+			}
+		}). catch( (e) => done(e) )
+	});
+
+	it('Test - Patch id not exists', (done) => {
+		request(app)
+				.patch('/todos/' + new ObjectId())
+				.send({text: 'dummy text'})
+				.expect(204)
+				.end(done);
+	});
+
+	it('Test - Patch invalid object ID value', (done) => {
+		request(app)
+				.patch('/todos/' + "123")
+				.expect(404)
+				.end(done);
+	});
+
+	it('Test - Patch with no field to update', (done) => {
+		// get just one ID
+		request(app)
+				.patch('/todos/' + new ObjectId())
+				.expect(404)
+				.end(done);
+	});	
+});
