@@ -4,6 +4,7 @@ const {ObjectId} =  require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 
 const todos = [{
 		text: "Something to do"
@@ -12,10 +13,23 @@ const todos = [{
 	}
 ];
 
+const users = [{
+		email: 'user1@gmail.com',
+		password: '123456',
+	}, {
+		email: 'user2@gmail.com',
+		password: '123456',
+	}
+];
+
 beforeEach( (done) => {
 	Todo.remove({}).then( () => {
 		return Todo.insertMany(todos);
-		}).then( () => done());
+	}).then( () => {
+		return User.remove({});
+	}).then( () => {
+		return User.insertMany(users);
+	}).then( () => done());		
 });
 
 describe('POST /todos', () => {
@@ -34,7 +48,7 @@ describe('POST /todos', () => {
 				}
 				Todo.find({text: text}).then( (todos) => {
 					expect(todos.length).toBe(1);
-					//expect(todos[0].text).toBe(text);
+					expect(todos[0].text).toBe(text);
 					done();
 				}). catch( (e) => done(e) )
 			})
@@ -225,4 +239,40 @@ describe('PATCH (update) /todos/:id', () => {
 				.expect(404)
 				.end(done);
 	});	
+});
+
+
+// =====================================================
+// users testing
+//======================================================
+describe('POST /users', () => {
+	it('Test - create new user', (done) => {
+		var userData = {
+			email: "thirdUser@email.com",
+			password: "123456"
+		};
+		
+		request(app)
+			.post('/users')
+			.send(userData)
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.email).toBe(userData.email);
+			})
+			.end(done);
+	}); 
+
+	it('Test - create dup user should fail', (done) => {
+		var userData = {
+			email: "thirdUser@email.com",
+			password: "123456"
+		};
+		
+		request(app)
+			.post('/users')
+			.send(userData)
+			.expect(200)
+			.end(done);
+
+	});
 });

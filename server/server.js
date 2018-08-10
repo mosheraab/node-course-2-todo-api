@@ -112,6 +112,31 @@ app.delete('/todos/:id', (req, res) => {
 	});
 });
 
+//
+// users
+//   
+app.get('/users', (req, res) => {
+	User.find().then( (users) => {
+		res.status(200).send( { users: users });
+	}, (e) => {
+		res.status(400).send(e);
+	});
+});
+
+app.post('/users', (req, res) => {
+	// add user
+	var userData = _.pick(req.body, [ 'email', 'password' ]);
+	user = new User(userData);
+	
+	user.save().then( () => {
+		return user.generateAuthToken();
+	}).then((token) => {
+		res.header('x-auth' /* custom value*/, token).send(user.toJSON());
+	}).catch((e) => {
+		res.status(400).send(e);
+	});
+});
+
 app.listen(port, () => {
 	console.log('Started server on port ', port);
 });
