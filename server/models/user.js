@@ -55,6 +55,30 @@ UserSchema.methods.generateAuthToken = function () {
 	});
 }
 
+UserSchema.statics.findByCredentials = function (userData) {
+	var User = this;
+	var email = userData.email;
+	var plainTextPassword = userData.password;
+	
+	return User.findOne({email}).then( (user) => {
+		if (!user) { // no user
+			console.log('User not found');
+			return Promise.reject('Bad user or password');
+		}
+		// check password
+		return new Promise( (resolve, reject) => {
+			bcrypt.compare(plainTextPassword, user.password, (err, resHashCheck) => {
+				if (resHashCheck) { // password is correct
+					// user.generateAuthToken().then((token) => { }) // rely on the token generated in POST
+					// console.log('find by credentials user: ', user.email, user.password);
+					resolve(user);
+				} else { // hash check failed
+					reject('Bad user or password');
+				}
+			})
+		});
+	});}
+
 UserSchema.statics.findByToken = function (token) {
 	var User = this;
 	var decoded;
