@@ -12,7 +12,7 @@ var UserSchema = new mongoose.Schema({
 		maxlength: 50,
 		//match: '/^[a-zA-Z0-9\.]+@[a-zA-Z0-9\.]+',
 		trim: true,
-		unique: true,
+		//unique: true,
 		validate: {
 			validator: validator.isEmail,
 			message:'{VALUE} is not a valid email'
@@ -51,6 +51,23 @@ UserSchema.methods.generateAuthToken = function () {
 	user.tokens = user.tokens.concat([{access, token}]);
 	return user.save().then( () => {
 		return token;
+	});
+}
+
+UserSchema.statics.findByToken = function (token) {
+	var User = this;
+	var decoded;
+	try {
+		decoded = jwt.verify(token, 'abc123');
+	} catch (e) {
+		return Promise.reject('Token verify error');
+	}
+	
+	// console.log('Decoded (in findByToken): ', decoded);
+	return User.findOne({
+		_id: decoded._id,
+		'tokens.token': token,
+		'tokens.access': 'auth'
 	});
 }
 
