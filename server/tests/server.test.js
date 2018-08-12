@@ -253,7 +253,7 @@ describe('GET /users/me', () => {
 });
 
 	
-	describe('POST /users', () => {
+describe('POST /users', () => {
 	it('Test - create new user', (done) => {
 		var userData = {
 			email: "thirdUser@email.com",
@@ -299,4 +299,41 @@ describe('GET /users/me', () => {
 			.end(done);
 
 	});
+});
+
+describe('POST /users/login', () => {
+	it('Test - return user and token, if authenticated', (done) => {
+		var userData = users[0];
+
+		User.findOne({email: userData.email}).then( (user) => {
+			request(app)
+				.post('/users/login')
+				.send(userData)
+				.expect(200)
+				.expect((res) => {
+					expect(res.body.email).toBe(user.email);
+					expect(res.header['x-auth']).not.toBeUndefined();
+				})
+				.end(done);
+		});
+	});
+	
+	it('Test - return 400, if bad authentication', (done) => {
+		var userData = {
+			email: "thirdUser@email.com",
+			password: "---"
+		};		
+		
+		request(app)
+			.post('/users/login')
+			.send(userData)
+			.expect(400)
+			.expect((res) => {
+				expect(res.body).toEqual({});
+				expect(res.header['x-auth']).toBeUndefined();
+			})
+			.end(done);
+
+	});
+	
 });

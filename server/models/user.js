@@ -62,7 +62,6 @@ UserSchema.statics.findByCredentials = function (userData) {
 	
 	return User.findOne({email}).then( (user) => {
 		if (!user) { // no user
-			console.log('User not found');
 			return Promise.reject('Bad user or password');
 		}
 		// check password
