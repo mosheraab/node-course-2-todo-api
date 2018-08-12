@@ -5,32 +5,11 @@ const {ObjectId} =  require('mongodb');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 const {User} = require('./../models/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed');
 
-const todos = [{
-		text: "Something to do"
-	}, {
-		text: "Something to do"
-	}
-];
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
-const users = [{
-		email: 'user1@gmail.com',
-		password: '123456',
-	}, {
-		email: 'user2@gmail.com',
-		password: '123456',
-	}
-];
-
-beforeEach( (done) => {
-	Todo.remove({}).then( () => {
-		return Todo.insertMany(todos);
-	}).then( () => {
-		return User.remove({});
-	}).then( () => {
-		return User.insertMany(users);
-	}).then( () => done());		
-});
 
 describe('POST /todos', () => {
 	it('Test - create new todo', (done) => {
@@ -245,7 +224,36 @@ describe('PATCH (update) /todos/:id', () => {
 // =====================================================
 // users testing
 //======================================================
-describe('POST /users', () => {
+describe('GET /users/me', () => {
+	it('Test - return user, if authenticated', (done) => {
+		User.findOne({email:'user1@gmail.com'}).then( (user) => {
+			request(app)
+				.get('/users/me')
+				.set('x-auth', user.tokens[0].token)
+				.expect(200)
+				.expect((res) => {
+					expect(res.body._id).toBe(user._id.toString());
+					expect(res.body.email).toBe(user.email);
+				})
+				.end(done);
+		});
+	});
+	
+	it('Test - return 401, if bad authentication', (done) => {
+		request(app)
+			.get('/users/me')
+			.set('x-auth', 'stam token')
+			.expect(401)
+			.expect((res) => {
+				expect(res.body).toEqual({});
+			})
+			.end(done);
+	});
+	
+});
+
+	
+	describe('POST /users', () => {
 	it('Test - create new user', (done) => {
 		var userData = {
 			email: "thirdUser@email.com",
@@ -257,11 +265,27 @@ describe('POST /users', () => {
 			.send(userData)
 			.expect(200)
 			.expect((res) => {
+				expect(res.body._id).not.toBeUndefined();
 				expect(res.body.email).toBe(userData.email);
+				expect(res.header['x-auth']).not.toBeUndefined();
 			})
 			.end(done);
 	}); 
 
+		it('Test - create with invalid email or password should fail', (done) => {
+		var userData = {
+			email: "bad email format",
+			password: "12"
+		};
+		
+		request(app)
+			.post('/users')
+			.send(userData)
+			.expect(400)
+			.end(done);
+
+	});
+	
 	it('Test - create dup user should fail', (done) => {
 		var userData = {
 			email: "thirdUser@email.com",
@@ -271,7 +295,7 @@ describe('POST /users', () => {
 		request(app)
 			.post('/users')
 			.send(userData)
-			.expect(200)
+			.expect(400)
 			.end(done);
 
 	});
