@@ -144,6 +144,26 @@ app.get('/users/me', authenticate, (req, res) => {
 	// failure to authenticate will be returned directly from authenticate
 });
 
+app.delete('/users/me/token', authenticate, (req, res) => {
+	var user = req.user; // received from authenticate
+	var token = req.token; 
+	
+	// find and delete token
+	// for (var i = 0; i< user.tokens.length; i++) {
+		// if (user.tokens[i].token == token) {
+			// user.tokens.splice(i, 1);
+			// break;
+		// }
+	// }
+	
+	// save the user, return ok
+	user.removeToken(token).then( () => {
+		res.status(200).send('Successful logout');
+	}, (err) => {
+		res.status(400).send(err);
+	});
+});
+
 app.post('/users/login', (req, res) => {
 	var body = _.pick(req.body, ['email', 'password']);
 
