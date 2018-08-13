@@ -305,17 +305,15 @@ describe('POST /users/login', () => {
 	it('Test - return user and token, if authenticated', (done) => {
 		var userData = users[0];
 
-		User.findOne({email: userData.email}).then( (user) => {
-			request(app)
-				.post('/users/login')
-				.send(userData)
-				.expect(200)
-				.expect((res) => {
-					expect(res.body.email).toBe(user.email);
-					expect(res.header['x-auth']).not.toBeUndefined();
-				})
-				.end(done);
-		});
+		request(app)
+			.post('/users/login')
+			.send(userData)
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.email).toBe(userData.email);
+				expect(res.header['x-auth']).not.toBeUndefined();
+			})
+			.end(done);
 	});
 	
 	it('Test - return 400, if bad authentication', (done) => {
@@ -335,5 +333,60 @@ describe('POST /users/login', () => {
 			.end(done);
 
 	});
+	
+});
+ 
+
+describe('DELETE /users/me/token', () => {
+	it('Test deleting a token for user', (done) => {
+		var userData = users[0];
+
+		// login with a user, first
+		request(app)
+			.post('/users/login')
+			.send(userData)
+			.expect(200)
+			.expect((res) => {
+				// then, logout
+				return request(app)
+					.delete('/users/me/token')
+					.send()
+					.expect(200)
+			})
+			.end(done);
+	
+	});
+
+	it('Test deleting a token for user (generate token and then delete it)', (done) => {
+		var userData = users[0];
+
+		// login with a user, first
+		User.findOne({email: userData.email}).then( (user) => {
+			return user.generateAuthToken();
+		}).then( (token) => {
+			request(app)
+				.delete('/users/me/token')
+				.set('x-auth', token)
+				.send()
+				.expect(200)
+				.expect((res) => {
+					expect(res.body).toEqual({});
+					expect(res.header['x-auth']).toBeUndefined();
+				})
+				.end(done);	
+		}).catch((e) => {
+			// error case
+			done(e);
+		});
+	});
+
+	it('Test deleting a token - failure', (done) => {
+
+		request(app)
+			.delete('/users/me/token')
+			.send()
+			.expect(401)
+			.end(done);
+	});	
 	
 });
