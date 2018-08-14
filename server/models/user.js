@@ -47,7 +47,7 @@ UserSchema.methods.toJSON = function () {
 UserSchema.methods.generateAuthToken = function () {
 	var user = this;
 	var access = 'auth';
-	var token = jwt.sign({_id: user._id.toString(), access}, 'abc123'/* to move to config file*/).toString();
+	var token = jwt.sign({_id: user._id.toString(), access}, process.env.JWT_SECRET).toString();
 	
 	user.tokens = user.tokens.concat([{access, token}]);
 	return user.save().then( () => {
@@ -82,7 +82,7 @@ UserSchema.statics.findByToken = function (token) {
 	var User = this;
 	var decoded;
 	try {
-		decoded = jwt.verify(token, 'abc123');
+		decoded = jwt.verify(token, process.env.JWT_SECRET);
 	} catch (e) {
 		return Promise.reject('Token verify error');
 	}
