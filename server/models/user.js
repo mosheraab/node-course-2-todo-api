@@ -13,7 +13,7 @@ var UserSchema = new mongoose.Schema({
 		maxlength: 50,
 		//match: '/^[a-zA-Z0-9\.]+@[a-zA-Z0-9\.]+',
 		trim: true,
-		//unique: true,
+		unique: true,
 		validate: {
 			validator: validator.isEmail,
 			message:'{VALUE} is not a valid email'
